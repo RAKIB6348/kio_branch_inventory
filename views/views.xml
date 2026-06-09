@@ -1,0 +1,95 @@
+<odoo>
+    <data>
+        <!--
+            Branch Inventory Menu Access Rule:
+            - Branch Inventory / User:
+                Can see only Internal Transfer and Stock menus.
+                Cannot create/edit/delete from these menu actions.
+            - Branch Inventory / Admin:
+                Can see all menus.
+        -->
+
+        <!-- Base Internal Transfer action: show only internal transfers and disable create/edit/delete -->
+        <record id="stock.action_picking_tree_internal" model="ir.actions.act_window">
+            <field name="domain">[('picking_type_code', '=', 'internal')]</field>
+            <field name="context">{'create': False, 'edit': False, 'delete': False}</field>
+        </record>
+
+        <!-- Main/root menu: visible for both Branch Inventory User and Admin -->
+        <menuitem id="menu_branch_inventory_root"
+                  name="Branch Inventory"
+                  sequence="145"
+                  web_icon="kio_branch_inventory,static/description/icon.png"
+                  groups="kio_branch_inventory.group_branch_inventory_user,kio_branch_inventory.group_branch_inventory_admin"/>
+
+        <!-- User + Admin: Internal Transfer menu -->
+        <menuitem id="menu_branch_inventory_internal_transfer"
+                  name="Internal Transfer"
+                  parent="menu_branch_inventory_root"
+                  action="stock.action_picking_tree_internal"
+                  sequence="1"
+                  groups="kio_branch_inventory.group_branch_inventory_user,kio_branch_inventory.group_branch_inventory_admin"/>
+
+        <!-- Base Stock action: disable create/edit/delete from Branch Inventory Stock menu -->
+        <record id="stock.action_product_stock_view" model="ir.actions.act_window">
+            <field name="context">{'create': False, 'edit': False, 'delete': False}</field>
+        </record>
+
+        <!-- User + Admin: Stock menu -->
+        <menuitem id="menu_branch_inventory_stock"
+                  name="Stock"
+                  parent="menu_branch_inventory_root"
+                  action="stock.action_product_stock_view"
+                  sequence="2"
+                  groups="kio_branch_inventory.group_branch_inventory_user,kio_branch_inventory.group_branch_inventory_admin"/>
+
+        <!-- Admin only: Physical Inventory Audit server action -->
+        <record model="ir.actions.server" id="action_branch_physical_inventory_audit">
+            <field name="name">Physical Inventory Audit</field>
+            <field name="model_id" ref="stock.model_stock_quant"/>
+            <field name="state">code</field>
+            <field name="groups_id" eval="[(6, 0, [ref('kio_branch_inventory.group_branch_inventory_admin')])]"/>
+            <field name="code">
+                action = model.with_context(branch_inventory_physical_inventory_audit=True).action_view_inventory()
+            </field>
+        </record>
+
+        <!-- Admin only: Physical Inventory Audit menu -->
+        <menuitem id="menu_branch_inventory_physical_inventory_audit"
+                  name="Physical Inventory Audit"
+                  parent="menu_branch_inventory_root"
+                  action="action_branch_physical_inventory_warehouse_wizard"
+                  sequence="3"
+                  groups="kio_branch_inventory.group_branch_inventory_admin"/>
+
+        <!-- Admin only: Quantity Update History menu -->
+        <menuitem id="menu_branch_inventory_quant_update_log"
+                  name="Quantity Update History"
+                  parent="menu_branch_inventory_root"
+                  action="action_branch_inventory_quant_update_log"
+                  sequence="5"
+                  groups="kio_branch_inventory.group_branch_inventory_admin"/>
+
+        <!-- Admin only: Warehouse User configuration menu -->
+        <menuitem id="menu_warehouse_user"
+                  name="Warehouse User"
+                  parent="stock.menu_stock_config_settings"
+                  sequence="6"
+                  groups="kio_branch_inventory.group_branch_inventory_admin"/>
+
+        <!-- Force replace old menu groups: keep Physical Inventory Audit admin-only -->
+        <record id="menu_branch_inventory_physical_inventory_audit" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('kio_branch_inventory.group_branch_inventory_admin')])]"/>
+        </record>
+
+        <!-- Force replace old menu groups: keep Quantity Update History admin-only -->
+        <record id="menu_branch_inventory_quant_update_log" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('kio_branch_inventory.group_branch_inventory_admin')])]"/>
+        </record>
+
+        <!-- Force replace old menu groups: keep Warehouse User admin-only -->
+        <record id="menu_warehouse_user" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('kio_branch_inventory.group_branch_inventory_admin')])]"/>
+        </record>
+    </data>
+</odoo>

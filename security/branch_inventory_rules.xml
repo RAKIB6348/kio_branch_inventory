@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <function name="write" model="ir.model.data">
+            <function name="search" model="ir.model.data">
+                <value eval="[('module', '=', 'kio_branch_inventory'), ('name', 'in', ['rule_stock_picking_internal_branch_user', 'rule_stock_picking_internal_branch_manager', 'rule_stock_picking_branch_warehouse_user', 'rule_stock_picking_branch', 'rule_stock_move_branch', 'rule_stock_move_line_branch', 'rule_stock_quant_branch', 'rule_stock_location_branch', 'rule_stock_warehouse_branch'])]"/>
+            </function>
+            <value eval="{'noupdate': False}"/>
+        </function>
+
+        <!-- Users with Warehouse User assignments see internal transfers when source or destination is assigned. -->
+        <record id="rule_stock_picking_internal_branch_user" model="ir.rule">
+            <field name="name">Branch User: Internal Transfer Disabled</field>
+            <field name="model_id" ref="stock.model_stock_picking"/>
+            <field name="domain_force">[('id', '!=', 0)]</field>
+            <field name="active" eval="False"/>
+        </record>
+
+        <record id="rule_stock_picking_internal_branch_manager" model="ir.rule">
+            <field name="name">Branch Manager: Internal Transfer Disabled</field>
+            <field name="model_id" ref="stock.model_stock_picking"/>
+            <field name="domain_force">[('id', '!=', 0)]</field>
+            <field name="active" eval="False"/>
+        </record>
+
+        <record id="rule_stock_picking_branch_warehouse_user" model="ir.rule">
+            <field name="name">Branch Warehouse User: Internal Transfer Disabled</field>
+            <field name="model_id" ref="stock.model_stock_picking"/>
+            <field name="domain_force">[('id', '!=', 0)]</field>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="rule_stock_picking_branch" model="ir.rule">
+            <field name="name">Branch User: Internal Transfer</field>
+            <field name="model_id" ref="stock.model_stock_picking"/>
+            <field name="groups" eval="[(5, 0, 0)]"/>
+            <field name="domain_force">
+                ['|',
+                    ('picking_type_code', '!=', 'internal'),
+                    '|',
+                        ('location_id', 'child_of', user.branch_warehouse_user_ids.mapped('location_id').ids),
+                        ('location_dest_id', 'child_of', user.branch_warehouse_user_ids.mapped('location_id').ids)
+                ] if user.branch_warehouse_user_ids else [('id', '!=', 0)]
+            </field>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="1"/>
+        </record>
+
+        <record id="rule_stock_move_branch" model="ir.rule">
+            <field name="name">Branch User: Internal Transfer Move</field>
+            <field name="model_id" ref="stock.model_stock_move"/>
+            <field name="groups" eval="[(5, 0, 0)]"/>
+            <field name="domain_force">
+                ['|',
+                    ('picking_id.picking_type_code', '!=', 'internal'),
+                    '|',
+                        ('location_id', 'child_of', user.branch_warehouse_user_ids.mapped('location_id').ids),
+                        ('location_dest_id', 'child_of', user.branch_warehouse_user_ids.mapped('location_id').ids)
+                ] if user.branch_warehouse_user_ids else [('id', '!=', 0)]
+            </field>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="1"/>
+        </record>
+
+        <record id="rule_stock_move_line_branch" model="ir.rule">
+            <field name="name">Branch User: Internal Transfer Move Line</field>
+            <field name="model_id" ref="stock.model_stock_move_line"/>
+            <field name="groups" eval="[(5, 0, 0)]"/>
+            <field name="domain_force">
+                ['|',
+                    ('picking_id.picking_type_code', '!=', 'internal'),
+                    '|',
+                        ('location_id', 'child_of', user.branch_warehouse_user_ids.mapped('location_id').ids),
+                        ('location_dest_id', 'child_of', user.branch_warehouse_user_ids.mapped('location_id').ids)
+                ] if user.branch_warehouse_user_ids else [('id', '!=', 0)]
+            </field>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="1"/>
+        </record>
+
+        <!-- Old broad branch rules are disabled so they do not restrict stock, locations, or warehouses. -->
+        <record id="rule_stock_quant_branch" model="ir.rule">
+            <field name="name">Branch User: Stock Quant Disabled</field>
+            <field name="model_id" ref="stock.model_stock_quant"/>
+            <field name="groups" eval="[(5, 0, 0)]"/>
+            <field name="domain_force">[('id', '!=', 0)]</field>
+            <field name="active" eval="False"/>
+        </record>
+
+        <record id="rule_stock_location_branch" model="ir.rule">
+            <field name="name">Branch User: Stock Location Disabled</field>
+            <field name="model_id" ref="stock.model_stock_location"/>
+            <field name="groups" eval="[(5, 0, 0)]"/>
+            <field name="domain_force">[('id', '!=', 0)]</field>
+            <field name="active" eval="False"/>
+        </record>
+
+        <record id="rule_stock_warehouse_branch" model="ir.rule">
+            <field name="name">Branch User: Warehouse Disabled</field>
+            <field name="model_id" ref="stock.model_stock_warehouse"/>
+            <field name="groups" eval="[(5, 0, 0)]"/>
+            <field name="domain_force">[('id', '!=', 0)]</field>
+            <field name="active" eval="False"/>
+        </record>
+
+
+        <record id="rule_stock_quant_branch_inventory_user" model="ir.rule">
+            <field name="name">Branch Inventory User: Assigned Warehouse Locations Only</field>
+            <field name="model_id" ref="stock.model_stock_quant"/>
+            <field name="domain_force">
+                [('id', '!=', 0)] if (
+                    not user.has_group('kio_branch_inventory.group_branch_inventory_user')
+                    or user.has_group('kio_branch_inventory.group_branch_inventory_admin')
+                ) else (
+                    [('location_id', 'child_of', user.branch_inventory_location_ids.ids)]
+                    if user.branch_inventory_location_ids else [('id', '=', 0)]
+                )
+            </field>
+            <field name="groups" eval="[(5, 0, 0)]"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+
+
+        <record id="rule_branch_inventory_quant_update_log_user" model="ir.rule">
+            <field name="name">Branch Inventory User: Quantity Update Logs Assigned Locations Only</field>
+            <field name="model_id" ref="model_kio_branch_inventory_quant_update_log"/>
+            <field name="domain_force">
+                [('id', '!=', 0)] if (
+                    not user.has_group('kio_branch_inventory.group_branch_inventory_user')
+                    or user.has_group('kio_branch_inventory.group_branch_inventory_admin')
+                ) else (
+                    [('location_id', 'child_of', user.branch_inventory_location_ids.ids)]
+                    if user.branch_inventory_location_ids else [('id', '=', 0)]
+                )
+            </field>
+            <field name="groups" eval="[(5, 0, 0)]"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="0"/>
+            <field name="perm_create" eval="0"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+
+    </data>
+</odoo>

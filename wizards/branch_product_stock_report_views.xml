@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_branch_product_stock_report_wizard_form" model="ir.ui.view">
+            <field name="name">branch.product.stock.report.wizard.form</field>
+            <field name="model">branch.product.stock.report.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Product Stock Report">
+                    <sheet>
+
+                        <group string="Report Options">
+                            <field name="report_type" widget="radio"/>
+                            <field name="warehouse_id"
+                                   invisible="report_type != 'specific'"
+                                   required="report_type == 'specific'"/>
+
+                        </group>
+
+                        <!-- <group string="Filters">
+                            <field name="category_id"/>
+                            <field name="product_id"/>
+                            <field name="active_products_only"/>
+                        </group> -->
+
+                    </sheet>
+                    <footer>
+                        <button name="action_print_report" string="Print PDF" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_branch_product_stock_report_wizard" model="ir.actions.act_window">
+            <field name="name">Product Stock Report</field>
+            <field name="res_model">branch.product.stock.report.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_branch_product_stock_report"
+                  name="Product Stock Report"
+                  parent="menu_branch_inventory_root"
+                  action="action_branch_product_stock_report_wizard"
+                  sequence="4"/>
+
+        <record id="menu_branch_product_stock_report" model="ir.ui.menu">
+            <field name="groups_id"
+                   eval="[(5, 0, 0), (4, ref('kio_branch_inventory.group_branch_inventory_user')), (4, ref('kio_branch_inventory.group_branch_inventory_admin')), (4, ref('stock.group_stock_user')), (4, ref('stock.group_stock_manager'))]"/>
+        </record>
+    </data>
+</odoo>

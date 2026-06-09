@@ -1,0 +1,19 @@
+<odoo>
+    <data>
+        <record id="module_category_branch_inventory" model="ir.module.category">
+            <field name="name">Branch Inventory</field>
+            <field name="sequence">45</field>
+        </record>
+
+        <record id="group_branch_inventory_user" model="res.groups">
+            <field name="name">User</field>
+            <field name="category_id" ref="module_category_branch_inventory"/>
+        </record>
+
+        <record id="group_branch_inventory_admin" model="res.groups">
+            <field name="name">Admin</field>
+            <field name="category_id" ref="module_category_branch_inventory"/>
+            <field name="implied_ids" eval="[(6, 0, [ref('stock.group_stock_manager')])]"/>
+        </record>
+    </data>
+</odoo>
