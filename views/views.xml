@@ -9,10 +9,29 @@
                 Can see all menus.
         -->
 
-        <!-- Base Internal Transfer action: show only internal transfers and disable create/edit/delete -->
+        <!-- Restore Odoo's shared actions in case an older module version made them read-only. -->
         <record id="stock.action_picking_tree_internal" model="ir.actions.act_window">
-            <field name="domain">[('picking_type_code', '=', 'internal')]</field>
-            <field name="context">{'create': False, 'edit': False, 'delete': False}</field>
+            <field name="domain"></field>
+            <field name="context">{'contact_display': 'partner_address', 'default_company_id': allowed_company_ids[0], 'restricted_picking_type_code': 'internal', 'search_default_internal': 1}</field>
+        </record>
+
+        <record id="stock.action_product_stock_view" model="ir.actions.act_window">
+            <field name="domain">[('detailed_type', '=', 'product')]</field>
+            <field name="context">{'default_detailed_type': 'product'}</field>
+        </record>
+
+        <!-- Keep the standard action for admins; regular users get a read-only UI. -->
+        <record id="action_branch_inventory_internal_transfer" model="ir.actions.server">
+            <field name="name">Internal Transfer</field>
+            <field name="model_id" ref="stock.model_stock_picking"/>
+            <field name="groups_id" eval="[(6, 0, [ref('kio_branch_inventory.group_branch_inventory_user'), ref('kio_branch_inventory.group_branch_inventory_admin')])]"/>
+            <field name="state">code</field>
+            <field name="code">
+action = env.ref('stock.action_picking_tree_internal').read()[0]
+if not env.user.has_group('kio_branch_inventory.group_branch_inventory_admin'):
+    action['domain'] = [('picking_type_code', '=', 'internal')]
+    action['context'] = dict(env.context, create=False, edit=False, delete=False)
+            </field>
         </record>
 
         <!-- Main/root menu: visible for both Branch Inventory User and Admin -->
@@ -26,20 +45,28 @@
         <menuitem id="menu_branch_inventory_internal_transfer"
                   name="Internal Transfer"
                   parent="menu_branch_inventory_root"
-                  action="stock.action_picking_tree_internal"
+                  action="action_branch_inventory_internal_transfer"
                   sequence="1"
                   groups="kio_branch_inventory.group_branch_inventory_user,kio_branch_inventory.group_branch_inventory_admin"/>
 
-        <!-- Base Stock action: disable create/edit/delete from Branch Inventory Stock menu -->
-        <record id="stock.action_product_stock_view" model="ir.actions.act_window">
-            <field name="context">{'create': False, 'edit': False, 'delete': False}</field>
+        <!-- Keep the standard action for admins; regular users get a read-only UI. -->
+        <record id="action_branch_inventory_stock" model="ir.actions.server">
+            <field name="name">Stock</field>
+            <field name="model_id" ref="stock.model_stock_quant"/>
+            <field name="groups_id" eval="[(6, 0, [ref('kio_branch_inventory.group_branch_inventory_user'), ref('kio_branch_inventory.group_branch_inventory_admin')])]"/>
+            <field name="state">code</field>
+            <field name="code">
+action = env.ref('stock.action_product_stock_view').read()[0]
+if not env.user.has_group('kio_branch_inventory.group_branch_inventory_admin'):
+    action['context'] = dict(env.context, create=False, edit=False, delete=False)
+            </field>
         </record>
 
         <!-- User + Admin: Stock menu -->
         <menuitem id="menu_branch_inventory_stock"
                   name="Stock"
                   parent="menu_branch_inventory_root"
-                  action="stock.action_product_stock_view"
+                  action="action_branch_inventory_stock"
                   sequence="2"
                   groups="kio_branch_inventory.group_branch_inventory_user,kio_branch_inventory.group_branch_inventory_admin"/>
 

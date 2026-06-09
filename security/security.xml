@@ -13,7 +13,7 @@
         <record id="group_branch_inventory_admin" model="res.groups">
             <field name="name">Admin</field>
             <field name="category_id" ref="module_category_branch_inventory"/>
-            <field name="implied_ids" eval="[(6, 0, [ref('stock.group_stock_manager')])]"/>
+            <field name="implied_ids" eval="[(6, 0, [ref('kio_branch_inventory.group_branch_inventory_user'), ref('stock.group_stock_manager')])]"/>
         </record>
     </data>
 </odoo>
